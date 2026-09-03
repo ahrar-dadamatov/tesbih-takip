@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Image,
 } from 'react-native';
 import { Link, useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -53,7 +54,11 @@ export default function RegisterScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.header}>
-            <Text style={styles.bismillah}>﷽</Text>
+            <Image 
+              source={require('../../../assets/images/icon.png')} 
+              style={styles.logo} 
+              resizeMode="contain"
+            />
             <Text style={styles.title}>{t.registerTitle}</Text>
           </View>
 
@@ -142,10 +147,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: theme.spacing.xxl,
   },
-  bismillah: {
-    fontSize: 42,
-    color: theme.colors.primary,
+  logo: {
+    width: 80,
+    height: 80,
     marginBottom: theme.spacing.md,
+    borderRadius: theme.borderRadius.xl,
   },
   title: {
     fontSize: theme.fontSize.xxl,
