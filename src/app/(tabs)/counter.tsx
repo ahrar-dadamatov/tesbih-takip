@@ -10,6 +10,7 @@ import {
   Platform,
   Modal,
   TextInput,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
