@@ -159,17 +159,27 @@ export default function CounterScreen() {
 
   const handleReset = () => {
     if (!selectedItem) return;
-    Alert.alert(t.reset, t.resetConfirm, [
-      { text: t.no, style: 'cancel' },
-      {
-        text: t.yes,
-        style: 'destructive',
-        onPress: async () => {
-          await resetCount(selectedItem.goalItem.id);
+
+    if (Platform.OS === 'web') {
+      const confirmed = window.confirm(`${t.reset}\n${t.resetConfirm}`);
+      if (confirmed) {
+        resetCount(selectedItem.goalItem.id).then(() => {
           setCurrentCount(0);
+        });
+      }
+    } else {
+      Alert.alert(t.reset, t.resetConfirm, [
+        { text: t.no, style: 'cancel' },
+        {
+          text: t.yes,
+          style: 'destructive',
+          onPress: async () => {
+            await resetCount(selectedItem.goalItem.id);
+            setCurrentCount(0);
+          },
         },
-      },
-    ]);
+      ]);
+    }
   };
 
   const selectPrev = () => {
@@ -259,9 +269,6 @@ export default function CounterScreen() {
                 </Text>
                 <Text style={styles.targetText}>
                   {t.target}: {target}
-                </Text>
-                <Text style={[styles.buttonLabel, { marginTop: 24 }]}>
-                  {isCompleted ? '✓' : t.tapToCount}
                 </Text>
               </Animated.View>
             </CircularProgress>
