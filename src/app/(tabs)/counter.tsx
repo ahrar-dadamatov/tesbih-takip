@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -240,32 +240,32 @@ export default function CounterScreen() {
           </Pressable>
         </View>
 
-        {/* Counter display */}
-        <View style={styles.counterArea}>
-          <CircularProgress
-            size={280}
-            strokeWidth={8}
-            progress={Math.min(progress, 1)}
-            color={progressColor}
+        {/* Counter display (Clickable) */}
+        <View style={[styles.counterArea, { flex: 1, justifyContent: 'center' }]}>
+          <Pressable 
+            onPress={handleCount} 
+            disabled={isCompleted}
+            style={({ pressed }) => [{ opacity: pressed ? 0.8 : 1 }]}
           >
-            <Animated.View style={[styles.countDisplay, countStyle]}>
-              <Text style={[styles.countText, { color: progressColor }]}>
-                {currentCount}
-              </Text>
-              <Text style={styles.targetText}>
-                {t.target}: {target}
-              </Text>
-            </Animated.View>
-          </CircularProgress>
-        </View>
-
-        {/* Counter button */}
-        <View style={styles.buttonArea}>
-          <CounterButton onPress={handleCount} size={160} disabled={isCompleted}>
-            <Text style={styles.buttonLabel}>
-              {isCompleted ? '✓' : t.tapToCount}
-            </Text>
-          </CounterButton>
+            <CircularProgress
+              size={320}
+              strokeWidth={10}
+              progress={Math.min(progress, 1)}
+              color={progressColor}
+            >
+              <Animated.View style={[styles.countDisplay, countStyle]}>
+                <Text style={[styles.countText, { color: progressColor }]}>
+                  {currentCount}
+                </Text>
+                <Text style={styles.targetText}>
+                  {t.target}: {target}
+                </Text>
+                <Text style={[styles.buttonLabel, { marginTop: 24 }]}>
+                  {isCompleted ? '✓' : t.tapToCount}
+                </Text>
+              </Animated.View>
+            </CircularProgress>
+          </Pressable>
         </View>
 
         {/* Reset button */}
