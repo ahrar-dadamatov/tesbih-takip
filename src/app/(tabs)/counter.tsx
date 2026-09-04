@@ -287,11 +287,11 @@ export default function CounterScreen() {
               progress={Math.min(progress, 1)}
               color={progressColor}
             >
-              <Animated.View style={[styles.countDisplay, countStyle]}>
-                <Text style={[styles.countText, { color: progressColor }]}>
+              <Animated.View style={[styles.countDisplay, countStyle, Platform.OS === 'web' && { userSelect: 'none' } as any]}>
+                <Text selectable={false} style={[styles.countText, { color: progressColor }]}>
                   {currentCount}
                 </Text>
-                <Text style={styles.targetText}>
+                <Text selectable={false} style={styles.targetText}>
                   {t.target}: {target}
                 </Text>
               </Animated.View>
