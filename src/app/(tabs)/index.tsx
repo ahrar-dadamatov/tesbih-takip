@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -51,7 +51,7 @@ export default function HomeScreen() {
         }
         
         await Share.share({
-          message: 'Hadi beraber zikir çekelim! Hedefime katılmak için davet kodum: ' + code + '\n\nVeya bu linke tıkla: https://tesbih.vercel.app/?invite=' + code
+          message: 'Hadi beraber zikir çekelim! Hedefime katılmak için davet kodum: ' + code + '\n\nVeya bu linke tıkla: https://tesbih-takip.vercel.app/?invite=' + code
         });
       } catch (e: any) {
         Alert.alert('Hata', e.message);
