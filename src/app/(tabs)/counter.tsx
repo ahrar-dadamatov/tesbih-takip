@@ -8,6 +8,8 @@ import {
   ScrollView,
   ActivityIndicator,
   Platform,
+  Modal,
+  TextInput,
 } from 'react-native';
 import { useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -32,6 +34,10 @@ export default function CounterScreen() {
   const [selectedGoalIndex, setSelectedGoalIndex] = useState(0);
   const [selectedItemIndex, setSelectedItemIndex] = useState(0);
   const [currentCount, setCurrentCount] = useState(0);
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [editCountValue, setEditCountValue] = useState('');
+  
+  const { setExactCount } = useProgress();
   
 
   const countAnim = useSharedValue(1);
@@ -182,6 +188,21 @@ export default function CounterScreen() {
     }
   };
 
+  const handleLongPress = () => {
+    if (!selectedItem) return;
+    setEditCountValue(currentCount.toString());
+    setEditModalVisible(true);
+  };
+
+  const handleSaveCount = async () => {
+    const parsed = parseInt(editCountValue, 10);
+    if (!isNaN(parsed) && parsed >= 0 && selectedItem) {
+      await setExactCount(selectedItem.goalItem.id, parsed);
+      setCurrentCount(parsed);
+    }
+    setEditModalVisible(false);
+  };
+
   const selectPrev = () => {
     if (selectedItemIndex > 0) {
       setSelectedItemIndex(selectedItemIndex - 1);
@@ -254,6 +275,8 @@ export default function CounterScreen() {
         <View style={[styles.counterArea, { flex: 1, justifyContent: 'center' }]}>
           <Pressable 
             onPress={handleCount} 
+            onLongPress={handleLongPress}
+            delayLongPress={500}
             disabled={isCompleted}
             style={({ pressed }) => [{ opacity: pressed ? 0.8 : 1 }]}
           >
@@ -299,6 +322,45 @@ export default function CounterScreen() {
           ))}
         </View>
       </LinearGradient>
+
+      {/* Edit Count Modal */}
+      <Modal
+        visible={editModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setEditModalVisible(false)}
+      >
+        <KeyboardAvoidingView 
+          style={styles.modalOverlay}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Sayacı Düzenle</Text>
+            <TextInput
+              style={styles.modalInput}
+              value={editCountValue}
+              onChangeText={setEditCountValue}
+              keyboardType="number-pad"
+              autoFocus
+              selectTextOnFocus
+            />
+            <View style={styles.modalButtons}>
+              <Pressable 
+                style={[styles.modalButton, styles.modalButtonCancel]} 
+                onPress={() => setEditModalVisible(false)}
+              >
+                <Text style={styles.modalButtonText}>İptal</Text>
+              </Pressable>
+              <Pressable 
+                style={[styles.modalButton, styles.modalButtonSave]} 
+                onPress={handleSaveCount}
+              >
+                <Text style={[styles.modalButtonText, { color: '#0a0e27' }]}>Kaydet</Text>
+              </Pressable>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </View>
   );
 }
@@ -424,5 +486,62 @@ const styles = StyleSheet.create({
   dotActive: {
     backgroundColor: theme.colors.primary,
     width: 24,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: theme.colors.surfaceLight,
+    padding: theme.spacing.lg,
+    borderRadius: theme.borderRadius.xl,
+    width: '80%',
+    maxWidth: 400,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  modalTitle: {
+    fontSize: theme.fontSize.lg,
+    fontWeight: '700',
+    color: theme.colors.text,
+    marginBottom: theme.spacing.md,
+    textAlign: 'center',
+  },
+  modalInput: {
+    backgroundColor: theme.colors.background,
+    borderRadius: theme.borderRadius.md,
+    padding: theme.spacing.md,
+    fontSize: theme.fontSize.xl,
+    color: theme.colors.text,
+    textAlign: 'center',
+    marginBottom: theme.spacing.lg,
+    borderWidth: 1,
+    borderColor: theme.colors.primary,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: theme.spacing.md,
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: theme.spacing.md,
+    borderRadius: theme.borderRadius.md,
+    alignItems: 'center',
+  },
+  modalButtonCancel: {
+    backgroundColor: theme.colors.surface,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  modalButtonSave: {
+    backgroundColor: theme.colors.primary,
+  },
+  modalButtonText: {
+    fontWeight: '600',
+    color: theme.colors.text,
+    fontSize: theme.fontSize.md,
   },
 });

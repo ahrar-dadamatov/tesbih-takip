@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../providers/AuthProvider';
 
@@ -103,6 +103,46 @@ export function useProgress() {
     }
   }, [user]);
 
+  const setExactCount = useCallback(async (goalItemId: string, newCount: number) => {
+    if (!user) return { error: 'Not authenticated' };
+
+    const today = getDateStr();
+
+    try {
+      const { data: existing } = await supabase
+        .from('progress')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('goal_item_id', goalItemId)
+        .eq('date', today)
+        .single();
+
+      if (existing) {
+        const { error } = await supabase
+          .from('progress')
+          .update({ count: newCount })
+          .eq('id', existing.id);
+        
+        if (error) throw error;
+        return { error: null, newCount };
+      } else {
+        const { error } = await supabase
+          .from('progress')
+          .insert({
+            user_id: user.id,
+            goal_item_id: goalItemId,
+            date: today,
+            count: newCount,
+          });
+        
+        if (error) throw error;
+        return { error: null, newCount };
+      }
+    } catch (e: any) {
+      return { error: e.message, newCount: 0 };
+    }
+  }, [user]);
+
   const resetCount = useCallback(async (goalItemId: string) => {
     if (!user) return;
 
@@ -124,6 +164,7 @@ export function useProgress() {
   return {
     fetchProgressForGoal,
     incrementCount,
+    setExactCount,
     resetCount,
     getTotalForItem,
     getDateStr,
