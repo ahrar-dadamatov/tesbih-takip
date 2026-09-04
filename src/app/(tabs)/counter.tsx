@@ -276,8 +276,6 @@ export default function CounterScreen() {
         <View style={[styles.counterArea, { flex: 1, justifyContent: 'center' }]}>
           <Pressable 
             onPress={handleCount} 
-            onLongPress={handleLongPress}
-            delayLongPress={500}
             disabled={isCompleted}
             style={({ pressed }) => [{ opacity: pressed ? 0.8 : 1 }]}
           >
@@ -299,13 +297,24 @@ export default function CounterScreen() {
           </Pressable>
         </View>
 
-        {/* Reset button */}
-        <View style={styles.resetArea}>
+        {/* Action buttons (Reset & Edit) */}
+        <View style={styles.actionArea}>
           <Pressable
             onPress={handleReset}
-            style={({ pressed }) => [styles.resetButton, pressed && styles.resetPressed]}
+            style={({ pressed }) => [styles.actionButton, styles.resetButton, pressed && styles.resetPressed]}
           >
             <Text style={styles.resetText}>{t.reset}</Text>
+          </Pressable>
+
+          <Pressable
+            onPress={() => {
+              if (!selectedItem) return;
+              setEditCountValue(currentCount.toString());
+              setEditModalVisible(true);
+            }}
+            style={({ pressed }) => [styles.actionButton, styles.editButton, pressed && styles.editPressed]}
+          >
+            <Text style={styles.editText}>Düzenle</Text>
           </Pressable>
         </View>
 
@@ -453,15 +462,20 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontWeight: '600',
   },
-  resetArea: {
+  actionArea: {
+    flexDirection: 'row',
+    justifyContent: 'center',
     alignItems: 'center',
+    gap: theme.spacing.md,
     marginBottom: theme.spacing.md,
   },
-  resetButton: {
+  actionButton: {
     paddingVertical: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.xl,
+    paddingHorizontal: theme.spacing.lg,
     borderRadius: theme.borderRadius.full,
     borderWidth: 1,
+  },
+  resetButton: {
     borderColor: theme.colors.border,
   },
   resetPressed: {
@@ -471,6 +485,18 @@ const styles = StyleSheet.create({
   resetText: {
     color: theme.colors.textMuted,
     fontSize: theme.fontSize.sm,
+  },
+  editButton: {
+    borderColor: theme.colors.primary,
+    backgroundColor: 'rgba(212, 168, 83, 0.05)',
+  },
+  editPressed: {
+    backgroundColor: 'rgba(212, 168, 83, 0.2)',
+  },
+  editText: {
+    color: theme.colors.primary,
+    fontSize: theme.fontSize.sm,
+    fontWeight: '500',
   },
   dots: {
     flexDirection: 'row',
