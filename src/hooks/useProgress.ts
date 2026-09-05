@@ -21,13 +21,18 @@ export function useProgress() {
   const getWeekDates = () => {
     const now = new Date();
     const dayOfWeek = now.getDay();
-    const monday = new Date(now);
-    monday.setDate(now.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+    // Friday is 5. Calculate days since last Friday.
+    // If today is Friday (5), daysSinceFriday = 0.
+    // If today is Thursday (4), daysSinceFriday = 6.
+    const daysSinceFriday = (dayOfWeek + 2) % 7;
+    
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - daysSinceFriday);
     
     const dates: string[] = [];
     for (let i = 0; i < 7; i++) {
-      const d = new Date(monday);
-      d.setDate(monday.getDate() + i);
+      const d = new Date(startOfWeek);
+      d.setDate(startOfWeek.getDate() + i);
       dates.push(getDateStr(d));
     }
     return dates;
