@@ -1,7 +1,8 @@
-﻿type TranslationKeys = {
+type TranslationKeys = {
   // Navigation
   home: string;
   counter: string;
+  history: string;
   profile: string;
   // Home screen
   welcomeBack: string;
@@ -68,6 +69,7 @@
 const tr: TranslationKeys = {
   home: 'Ana Sayfa',
   counter: 'Sayaç',
+  history: 'Geçmiş',
   profile: 'Profil',
   welcomeBack: 'Hoş Geldiniz',
   weeklyProgress: 'Haftalık İlerleme',
@@ -78,7 +80,6 @@ const tr: TranslationKeys = {
   completed: 'Tamamlandı',
   remaining: 'Kalan',
   of: '/',
-  counter: 'Sayaç',
   selectDhikr: 'Zikir seçin',
   tapToCount: 'Saymak için dokunun',
   reset: 'Sıfırla',
@@ -129,6 +130,7 @@ const tr: TranslationKeys = {
 const ru: TranslationKeys = {
   home: 'Главная',
   counter: 'Счётчик',
+  history: 'История',
   profile: 'Профиль',
   welcomeBack: 'Добро пожаловать',
   weeklyProgress: 'Недельный прогресс',

@@ -67,6 +67,27 @@ export function useProgress() {
     }
   }, [user]);
 
+  const fetchFullHistory = useCallback(async () => {
+    if (!user) return [];
+    
+    try {
+      const { data, error } = await supabase
+        .from('progress')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('date', { ascending: false });
+        
+      if (error) {
+        console.error('Error fetching full history:', error);
+        return [];
+      }
+      return data || [];
+    } catch (e) {
+      console.error('Network request failed:', e);
+      return [];
+    }
+  }, [user]);
+
   const incrementCount = useCallback(async (goalItemId: string, incrementBy: number = 1) => {
     if (!user) return { error: 'Not authenticated' };
 
@@ -168,6 +189,7 @@ export function useProgress() {
 
   return {
     fetchProgressForGoal,
+    fetchFullHistory,
     incrementCount,
     setExactCount,
     resetCount,

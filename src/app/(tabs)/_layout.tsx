@@ -1,4 +1,4 @@
-﻿import { Tabs } from 'expo-router';
+import { Tabs } from 'expo-router';
 import { View, Text, StyleSheet } from 'react-native';
 import { useLanguage } from '../../providers/LanguageProvider';
 import { theme } from '../../constants/theme';
@@ -7,6 +7,7 @@ function TabIcon({ name, focused }: { name: string; focused: boolean }) {
   const icons: Record<string, string> = {
     home: '🏠',
     counter: '📿',
+    history: '📅',
     profile: '👤',
   };
   return (
@@ -43,6 +44,13 @@ export default function TabLayout() {
         options={{
           title: t.counter,
           tabBarIcon: ({ focused }) => <TabIcon name="counter" focused={focused} />,
+        }}
+      />
+      <Tabs.Screen
+        name="history"
+        options={{
+          title: t.history,
+          tabBarIcon: ({ focused }) => <TabIcon name="history" focused={focused} />,
         }}
       />
       <Tabs.Screen
