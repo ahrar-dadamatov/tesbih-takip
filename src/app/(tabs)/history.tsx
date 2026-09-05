@@ -177,8 +177,8 @@ const styles = StyleSheet.create({
   headerGradient: {
     paddingTop: 60,
     paddingBottom: 20,
-    borderBottomLeftRadius: theme.borderRadius.2xl,
-    borderBottomRightRadius: theme.borderRadius.2xl,
+    borderBottomLeftRadius: theme.borderRadius['2xl'],
+    borderBottomRightRadius: theme.borderRadius['2xl'],
   },
   header: {
     paddingHorizontal: theme.spacing.lg,
