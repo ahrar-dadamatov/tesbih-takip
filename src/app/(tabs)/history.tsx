@@ -184,7 +184,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.lg,
   },
   title: {
-    fontSize: theme.fontSize.2xl,
+    fontSize: theme.fontSize['2xl'],
     fontWeight: '800',
     color: theme.colors.text,
   },
