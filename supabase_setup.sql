@@ -1,4 +1,4 @@
-﻿-- =============================================
+-- =============================================
 -- Tesbih Takip - Supabase Database Setup
 -- Run this SQL in your Supabase SQL Editor
 -- =============================================
@@ -37,6 +37,8 @@ CREATE TABLE IF NOT EXISTS goals (
   name TEXT NOT NULL,
   period TEXT NOT NULL DEFAULT 'weekly' CHECK (period IN ('weekly', 'daily')),
   is_active BOOLEAN NOT NULL DEFAULT true,
+  is_global BOOLEAN NOT NULL DEFAULT false,
+  invite_code TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -50,6 +52,7 @@ CREATE TABLE IF NOT EXISTS goal_items (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   goal_id UUID NOT NULL REFERENCES goals(id) ON DELETE CASCADE,
   dhikr_name TEXT NOT NULL,
+  description TEXT DEFAULT '',
   target_count INTEGER NOT NULL DEFAULT 0 CHECK (target_count >= 0),
   sort_order INTEGER NOT NULL DEFAULT 0,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -60,6 +63,32 @@ CREATE POLICY "Users can CRUD own goal items" ON goal_items FOR ALL
   USING (EXISTS (SELECT 1 FROM goals WHERE goals.id = goal_items.goal_id AND goals.user_id = auth.uid()))
   WITH CHECK (EXISTS (SELECT 1 FROM goals WHERE goals.id = goal_items.goal_id AND goals.user_id = auth.uid()));
 CREATE INDEX idx_goal_items_goal_id ON goal_items(goal_id);
+
+-- Join goal by invite RPC function
+CREATE OR REPLACE FUNCTION join_goal_by_invite(p_invite_code TEXT)
+RETURNS UUID AS $$
+DECLARE
+  v_source_goal goals%ROWTYPE;
+  v_new_goal_id UUID;
+  v_item RECORD;
+BEGIN
+  SELECT * INTO v_source_goal FROM goals WHERE invite_code = p_invite_code AND is_active = true LIMIT 1;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Hedef bulunamadı';
+  END IF;
+
+  INSERT INTO goals (user_id, name, period, is_active, is_global)
+  VALUES (auth.uid(), v_source_goal.name, v_source_goal.period, true, false)
+  RETURNING id INTO v_new_goal_id;
+
+  FOR v_item IN SELECT * FROM goal_items WHERE goal_id = v_source_goal.id LOOP
+    INSERT INTO goal_items (goal_id, dhikr_name, description, target_count, sort_order)
+    VALUES (v_new_goal_id, v_item.dhikr_name, v_item.description, v_item.target_count, v_item.sort_order);
+  END LOOP;
+
+  RETURN v_new_goal_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- 4. Progress
 CREATE TABLE IF NOT EXISTS progress (
