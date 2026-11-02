@@ -49,10 +49,19 @@ export default function HistoryScreen() {
   const [history, setHistory] = useState<ProgressEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const loadData = useCallback(async () => {
-    const data = await fetchFullHistory();
-    setHistory(data);
+    setErrorMsg(null);
+    const { data, error } = await fetchFullHistory();
+    if (error) {
+      setErrorMsg(error);
+      setHistory([]);
+    } else {
+      // Sort data by date descending since we removed .order() from supabase
+      const sortedData = [...data].sort((a, b) => b.date.localeCompare(a.date));
+      setHistory(sortedData);
+    }
     setLoading(false);
   }, [fetchFullHistory]);
 
@@ -132,10 +141,16 @@ export default function HistoryScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.colors.primary} />
         }
       >
-        {groupedData.length === 0 ? (
+        {errorMsg ? (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyIcon}>⚠️</Text>
+            <Text style={styles.emptyText}>Hata: {errorMsg}</Text>
+          </View>
+        ) : groupedData.length === 0 ? (
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyIcon}>📅</Text>
             <Text style={styles.emptyText}>{t.noGoalsYet}</Text>
+            <Text style={{color: 'gray', marginTop: 10}}>Toplam Kayıt: {history.length}</Text>
           </View>
         ) : (
           groupedData.map(group => (
@@ -177,14 +192,14 @@ const styles = StyleSheet.create({
   headerGradient: {
     paddingTop: 60,
     paddingBottom: 20,
-    borderBottomLeftRadius: theme.borderRadius['2xl'],
-    borderBottomRightRadius: theme.borderRadius['2xl'],
+    borderBottomLeftRadius: theme.borderRadius.xl,
+    borderBottomRightRadius: theme.borderRadius.xl,
   },
   header: {
     paddingHorizontal: theme.spacing.lg,
   },
   title: {
-    fontSize: theme.fontSize['2xl'],
+    fontSize: theme.fontSize.xxl,
     fontWeight: '800',
     color: theme.colors.text,
   },

@@ -94,7 +94,7 @@ export default function CounterScreen() {
   );
 
     const syncState = useRef({ id: '', count: 0 });
-  const syncTimeout = useRef<NodeJS.Timeout | null>(null);
+  const syncTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const flushSync = useCallback(async () => {
     if (syncState.current.count > 0 && syncState.current.id) {

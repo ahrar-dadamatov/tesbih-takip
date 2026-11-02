@@ -68,23 +68,22 @@ export function useProgress() {
   }, [user]);
 
   const fetchFullHistory = useCallback(async () => {
-    if (!user) return [];
+    if (!user) return { data: [], error: 'Not authenticated' };
     
     try {
       const { data, error } = await supabase
         .from('progress')
         .select('*')
-        .eq('user_id', user.id)
-        .order('date', { ascending: false });
+        .eq('user_id', user.id);
         
       if (error) {
         console.error('Error fetching full history:', error);
-        return [];
+        return { data: [], error: error.message };
       }
-      return data || [];
-    } catch (e) {
+      return { data: data || [], error: null };
+    } catch (e: any) {
       console.error('Network request failed:', e);
-      return [];
+      return { data: [], error: e.message || 'Network request failed' };
     }
   }, [user]);
 

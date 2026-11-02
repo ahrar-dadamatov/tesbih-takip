@@ -47,7 +47,7 @@ export default function HomeScreen() {
         if (!code) {
           const res = await generateInviteCode(goal.id);
           if (res.error) throw new Error(res.error);
-          code = res.code;
+          code = res.code ?? undefined;
         }
         
         await Share.share({
