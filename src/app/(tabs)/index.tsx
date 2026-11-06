@@ -54,7 +54,8 @@ export default function HomeScreen() {
           message: 'Hadi beraber zikir çekelim! Hedefime katılmak için davet kodum: ' + code + '\n\nVeya bu linke tıkla: https://tesbih-takip.vercel.app/?invite=' + code
         });
       } catch (e: any) {
-        Alert.alert('Hata', e.message);
+        // Пользователь просто закрыл меню «Поделиться»
+        if (e?.name !== 'AbortError') Alert.alert('Hata', e.message);
       }
     };
 

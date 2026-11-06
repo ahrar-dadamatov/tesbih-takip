@@ -1,15 +1,5 @@
+import '../lib/web-alert';
 import { useEffect } from 'react';
-import { Platform } from 'react-native';
-
-if (Platform.OS === 'web' && typeof document !== 'undefined') {
-  const style = document.createElement('style');
-  style.textContent = `
-    html, body, #root {
-      height: 100dvh !important;
-    }
-  `;
-  document.head.appendChild(style);
-}
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';

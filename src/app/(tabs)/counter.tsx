@@ -117,6 +117,18 @@ export default function CounterScreen() {
     }, [flushSync])
   );
 
+  // Установленное приложение могут закрыть сразу после нажатий: сохраняем счёт, не дожидаясь таймера
+  useEffect(() => {
+    if (Platform.OS !== 'web') return;
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') flushSync();
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [flushSync]);
+
   const handleCount = () => {
     if (!selectedItem) return;
 
@@ -154,6 +166,10 @@ export default function CounterScreen() {
     if (Platform.OS !== 'web') return;
     
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Экран остаётся смонтированным на других вкладках: не перехватываем ввод текста
+      const target = e.target as HTMLElement | null;
+      if (target?.tagName === 'INPUT' || target?.tagName === 'TEXTAREA') return;
+
       if (e.code === 'Space' || e.code === 'Enter') {
         e.preventDefault();
         handleCountRef.current();

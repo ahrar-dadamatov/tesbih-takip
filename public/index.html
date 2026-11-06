@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="tr">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <!-- maximum-scale не даёт iOS приближать экран при фокусе на поле ввода -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover"
+    />
+    <title>Tesbih Takip</title>
+    <meta name="theme-color" content="#0a0e27" />
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Tesbih Takip" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <!-- The `react-native-web` recommended style reset: https://necolas.github.io/react-native-web/docs/setup/#root-element -->
+    <style id="expo-reset">
+      html,
+      body {
+        height: 100%;
+        background-color: #0a0e27;
+        overscroll-behavior: none;
+        /* Быстрые нажатия на счётчик не должны приближать экран или выделять текст */
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        user-select: none;
+      }
+      input,
+      textarea {
+        -webkit-user-select: text;
+        user-select: text;
+      }
+      body {
+        overflow: hidden;
+      }
+      #root {
+        display: flex;
+        height: 100dvh;
+        flex: 1;
+      }
+      /* В установленном приложении на iPhone 100% короче экрана, и снизу остаётся пустая полоса */
+      @media (display-mode: standalone) {
+        html,
+        body,
+        #root {
+          height: 100vh;
+        }
+      }
+    </style>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function () {
+          navigator.serviceWorker.register('/sw.js').catch(function (error) {
+            console.warn('Service worker registration failed:', error);
+          });
+        });
+      }
+    </script>
+  </head>
+
+  <body>
+    <noscript>
+      You need to enable JavaScript to run this app.
+    </noscript>
+    <div id="root"></div>
+  </body>
+</html>

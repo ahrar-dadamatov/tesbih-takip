@@ -35,7 +35,8 @@ export function CounterButton({ onPress, size = 200, children, disabled }: Count
     if (disabled) return;
     
     // Haptic feedback
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    // Вибрация есть не во всех браузерах: счётчик работает и без неё
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
     
     // Scale animation
     scale.value = withSequence(
