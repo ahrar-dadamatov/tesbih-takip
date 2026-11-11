@@ -112,31 +112,51 @@ export function useGoals() {
 
       if (goalErr) throw goalErr;
 
-      // Delete existing items to avoid complex merge
-      const { error: delErr } = await supabase
+      // Удаление зикра каскадно удаляет весь его счёт в progress, поэтому существующие зикры
+      // обновляем на месте, а удаляем только те, что пользователь убрал из списка, и только в конце:
+      // если что-то упадёт раньше, цель не останется без зикров.
+      const { data: existingItems, error: fetchErr } = await supabase
         .from('goal_items')
-        .delete()
+        .select('id')
         .eq('goal_id', goalId);
 
-      if (delErr) throw delErr;
+      if (fetchErr) throw fetchErr;
 
-      // Insert new/updated items
-      const goalItems = items.map((item, index) => ({
-        id: item.id, // optional: keep same id if it exists so progress doesn't break
-        goal_id: goalId,
+      const existingIds = new Set((existingItems || []).map((item: { id: string }) => item.id));
+      const fields = (item: (typeof items)[number], index: number) => ({
         dhikr_name: item.dhikr_name,
         description: item.description,
         target_count: item.target_count,
         sort_order: index,
-      }));
+      });
 
-      // We should filter out undefined IDs so Supabase auto-generates new ones,
-      // but if we pass an existing UUID it will keep it (so progress links aren't lost)
-      const { error: itemsErr } = await supabase
-        .from('goal_items')
-        .insert(goalItems);
+      for (const [index, item] of items.entries()) {
+        if (!item.id || !existingIds.has(item.id)) continue;
+        const { error: updErr } = await supabase
+          .from('goal_items')
+          .update(fields(item, index))
+          .eq('id', item.id);
 
-      if (itemsErr) throw itemsErr;
+        if (updErr) throw updErr;
+      }
+
+      const newItems = items
+        .map((item, index) => ({ item, index }))
+        .filter(({ item }) => !item.id || !existingIds.has(item.id))
+        .map(({ item, index }) => ({ goal_id: goalId, ...fields(item, index) }));
+
+      if (newItems.length > 0) {
+        const { error: insErr } = await supabase.from('goal_items').insert(newItems);
+        if (insErr) throw insErr;
+      }
+
+      const keptIds = new Set(items.map((item) => item.id).filter(Boolean));
+      const removedIds = [...existingIds].filter((id) => !keptIds.has(id));
+
+      if (removedIds.length > 0) {
+        const { error: delErr } = await supabase.from('goal_items').delete().in('id', removedIds);
+        if (delErr) throw delErr;
+      }
 
       await fetchGoals();
       return { error: null };
