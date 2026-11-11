@@ -64,6 +64,10 @@ type TranslationKeys = {
   success: string;
   today: string;
   thisWeek: string;
+  // Сохранение счёта
+  saving: string;
+  saved: string;
+  savedOnDevice: string;
 };
 
 const tr: TranslationKeys = {
@@ -125,6 +129,9 @@ const tr: TranslationKeys = {
   success: 'Başarılı',
   today: 'Bugün',
   thisWeek: 'Bu Hafta',
+  saving: 'Kaydediliyor…',
+  saved: 'Kaydedildi',
+  savedOnDevice: 'İnternet yok: telefonda saklandı, bağlanınca gönderilecek',
 };
 
 const ru: TranslationKeys = {
@@ -186,6 +193,9 @@ const ru: TranslationKeys = {
   success: 'Успешно',
   today: 'Сегодня',
   thisWeek: 'Эта неделя',
+  saving: 'Сохраняется…',
+  saved: 'Сохранено',
+  savedOnDevice: 'Нет интернета: сохранено на телефоне, отправится при подключении',
 };
 
 const translations: Record<string, TranslationKeys> = { tr, ru };

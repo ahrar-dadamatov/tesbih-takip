@@ -23,13 +23,16 @@ import { useLanguage } from '../../providers/LanguageProvider';
 import { useGoals, GoalItem } from '../../hooks/useGoals';
 import { useProgress } from '../../hooks/useProgress';
 import { CounterButton } from '../../components/CounterButton';
+import { flushProgress } from '../../lib/progressSync';
+import { useSyncStatus } from '../../hooks/useSyncStatus';
 import { CircularProgress } from '../../components/CircularProgress';
 import { theme } from '../../constants/theme';
 
 export default function CounterScreen() {
   const { t } = useLanguage();
   const { goals, loading: goalsLoading, fetchGoals } = useGoals();
-  const { incrementCount, resetCount, fetchProgressForGoal, getTotalForItem } = useProgress();
+  const { addCount, resetCount, setExactCount, fetchProgressForGoal, getTotalForItem } = useProgress();
+  const syncStatus = useSyncStatus();
   const params = useLocalSearchParams<{ goalItemId?: string; goalId?: string }>();
 
   const [selectedGoalIndex, setSelectedGoalIndex] = useState(0);
@@ -37,8 +40,6 @@ export default function CounterScreen() {
   const [currentCount, setCurrentCount] = useState(0);
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [editCountValue, setEditCountValue] = useState('');
-  
-  const { setExactCount } = useProgress();
   
 
   const countAnim = useSharedValue(1);
@@ -93,41 +94,14 @@ export default function CounterScreen() {
     }, [])
   );
 
-    const syncState = useRef({ id: '', count: 0 });
-  const syncTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const flushSync = useCallback(async () => {
-    if (syncState.current.count > 0 && syncState.current.id) {
-      const { id, count } = syncState.current;
-      syncState.current.count = 0;
-      if (syncTimeout.current) clearTimeout(syncTimeout.current);
-      
-      const { error } = await incrementCount(id, count);
-      if (error) {
-        console.error('Sync failed:', error);
-      }
-    }
-  }, [incrementCount]);
-
+  // Ушли с экрана: отправляем накопленное сразу, чтобы другие вкладки увидели свежий счёт
   useFocusEffect(
     useCallback(() => {
       return () => {
-        flushSync();
+        flushProgress();
       };
-    }, [flushSync])
+    }, [])
   );
-
-  // Установленное приложение могут закрыть сразу после нажатий: сохраняем счёт, не дожидаясь таймера
-  useEffect(() => {
-    if (Platform.OS !== 'web') return;
-
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden') flushSync();
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [flushSync]);
 
   const handleCount = () => {
     if (!selectedItem) return;
@@ -143,18 +117,7 @@ export default function CounterScreen() {
       Alert.alert('Tebrikler', t.goalCompleted);
     }
 
-    if (syncState.current.id && syncState.current.id !== selectedItem.goalItem.id) {
-      flushSync();
-    }
-
-    syncState.current.id = selectedItem.goalItem.id;
-    syncState.current.count += 1;
-
-    if (syncTimeout.current) clearTimeout(syncTimeout.current);
-    
-    syncTimeout.current = setTimeout(() => {
-      flushSync();
-    }, 20000);
+    addCount(selectedItem.goalItem.id);
   };
 
   const handleCountRef = useRef(handleCount);
@@ -183,26 +146,21 @@ export default function CounterScreen() {
   const handleReset = () => {
     if (!selectedItem) return;
 
-    if (Platform.OS === 'web') {
-      const confirmed = window.confirm(`${t.reset}\n${t.resetConfirm}`);
-      if (confirmed) {
-        resetCount(selectedItem.goalItem.id).then(() => {
-          setCurrentCount(0);
-        });
-      }
-    } else {
-      Alert.alert(t.reset, t.resetConfirm, [
-        { text: t.no, style: 'cancel' },
-        {
-          text: t.yes,
-          style: 'destructive',
-          onPress: async () => {
-            await resetCount(selectedItem.goalItem.id);
-            setCurrentCount(0);
-          },
+    const { id } = selectedItem.goalItem;
+    const { period } = selectedItem;
+
+    Alert.alert(t.reset, t.resetConfirm, [
+      { text: t.no, style: 'cancel' },
+      {
+        text: t.yes,
+        style: 'destructive',
+        onPress: async () => {
+          const { error } = await resetCount(id, period);
+          if (error) Alert.alert(t.error, error);
+          await loadCountForId(id, period);
         },
-      ]);
-    }
+      },
+    ]);
   };
 
   const handleLongPress = () => {
@@ -213,11 +171,14 @@ export default function CounterScreen() {
 
   const handleSaveCount = async () => {
     const parsed = parseInt(editCountValue, 10);
-    if (!isNaN(parsed) && parsed >= 0 && selectedItem) {
-      await setExactCount(selectedItem.goalItem.id, parsed);
-      setCurrentCount(parsed);
-    }
     setEditModalVisible(false);
+    if (!isNaN(parsed) && parsed >= 0 && selectedItem) {
+      const { id } = selectedItem.goalItem;
+      const { period } = selectedItem;
+      const { error } = await setExactCount(id, parsed, period);
+      if (error) Alert.alert(t.error, error);
+      await loadCountForId(id, period);
+    }
   };
 
   const selectPrev = () => {
@@ -333,6 +294,10 @@ export default function CounterScreen() {
             <Text style={styles.editText}>Düzenle</Text>
           </Pressable>
         </View>
+
+        <Text style={[styles.syncText, syncStatus === 'offline' && styles.syncTextOffline]}>
+          {syncStatus === 'saved' ? `✓ ${t.saved}` : syncStatus === 'saving' ? t.saving : t.savedOnDevice}
+        </Text>
 
         {/* Item dots indicator */}
         <View style={styles.dots}>
@@ -462,6 +427,15 @@ const styles = StyleSheet.create({
   countText: {
     fontSize: theme.fontSize.counter,
     fontWeight: '800',
+  },
+  syncText: {
+    textAlign: 'center',
+    fontSize: theme.fontSize.xs,
+    color: theme.colors.textMuted,
+    marginTop: theme.spacing.sm,
+  },
+  syncTextOffline: {
+    color: theme.colors.warning,
   },
   targetText: {
     fontSize: theme.fontSize.sm,
